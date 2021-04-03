@@ -1,5 +1,5 @@
 import requests
-import json
+import csv
 from tqdm import tqdm
 import time
 import random
@@ -28,25 +28,25 @@ def scrape_info(file_object, periods, url, headers, proxies):
     # priods | priods_date | title | works_date | author | view_counts | like | bullet_screen_counts | video_label | video_link
     
     for d in datas_list:
-        data = {
-            'priods': datas_config['number'],
-            'priods_date': datas_config['stime'],
-            'title': d['title'],
-            'works_date': d['ctime'],
-            'author': d['owner']['name'],
-            'view_counts': d['stat']['view'],
-            'like': d['stat']['like'],
-            'bullet_screen_counts': d['stat']['danmaku'],
-            'video_label': d['rcmd_reason'],
-            'video_link': d['short_link']
-        }
-        file_object.write(json.dumps(data) + '\n')
+        file_object.writerow([
+            datas_config['number'],  # priods
+            datas_config['stime'],  # priods_date
+            d['title'],  #  title
+            d['ctime'],  # works_date
+            d['owner']['name'],  #  author
+            d['stat']['view'],  #  view_counts
+            d['stat']['like'],  #  like
+            d['stat']['danmaku'],  # bullet_screen_counts
+            d['rcmd_reason'],  # video_label
+            d['short_link']  # video_link
+        ])
+
         print(d['title'])
 
 def main():
     proxies = {
     'http': '116.117.134.134:80',
-    # 'http': '112.80.248.75:80'
+    # 'http': '202.108.22.5:80'
     }
 
     headers = {
@@ -62,11 +62,13 @@ def main():
         'sec-fetch-site': 'same-site',
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36'
     }
-    last_periods = 105  # 最新期数
+    last_periods = 106  # 最新期数
     api_url = 'https://api.bilibili.com/x/web-interface/popular/series/one?number={periods}'
-    f = open(f'./data/all_periods_data.json', 'w', encoding='utf-8')
+    f = open(f'./data/all_periods_data.csv', 'w', encoding='utf-8', newline='')
+    csv_writer = csv.writer(f)
+    csv_writer.writerow(['priods', 'priods_date', 'title', 'works_date', 'author', 'view_counts', 'like', 'bullet_screen_counts', 'video_label', 'video_link'])
     for i in tqdm(range(1, last_periods + 1), desc='Processing:'):
-        scrape_info(file_object=f, periods=i, url=api_url, headers=headers, proxies=proxies)
+        scrape_info(file_object=csv_writer, periods=i, url=api_url, headers=headers, proxies=proxies)
         time.sleep(random.randint(1, 4))
     f.close()
 
